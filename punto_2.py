@@ -1,6 +1,20 @@
+import os
 import PyPDF2
 import re
 import sqlite3 as sql
+
+def checkFile(fileName):
+    file = open("pdf/" + fileName, "rb")
+    try:
+        pdf = PyPDF2.PdfReader(file)
+        info = pdf.metadata
+        if info:
+            return True
+        else:
+            return False
+    except Exception as e:
+        return False
+
 
 def pdfNumberOfPages(fileObject):
     read_pdf = PyPDF2.PdfReader(fileObject)
@@ -61,13 +75,23 @@ def insertRow(fileName, numberOfPages, cufe, peso):
 createDB()
 #Solicita el nombre del archivo
 fileName = input("Hola. Introduce el nombre del archivo: ")
-file = open("pdf/" + fileName, "rb")
-#Obtener el peso del archivo
-weight = getSize(file)
-#Obtener el número de páginas del archivo
-numberOfPages = pdfNumberOfPages(file)
-#Obtener el CUFE
-cufe = pdfGetCUFE(file)
-#Guardar o actualizar el registro dependiendo del nombre del archivo
-insertRow(fileName, numberOfPages, cufe.group(), weight)
+#verifica que el archivo existe
+existFile = os.path.exists("pdf/" + fileName)
+if existFile:
+    file = open("pdf/" + fileName, "rb")
+    #Valida que el archivo sea PDF
+    checkedFile = checkFile(fileName)
+    if checkedFile:
+        #Obtener el peso del archivo
+        weight = getSize(file)
+        #Obtener el número de páginas del archivo
+        numberOfPages = pdfNumberOfPages(file)
+        #Obtener el CUFE
+        cufe = pdfGetCUFE(file)
+        #Guardar o actualizar el registro dependiendo del nombre del archivo
+        insertRow(fileName, numberOfPages, cufe.group(), weight)
+    else:
+        print("Archivo no valido")
+else:
+    print("Archivo no encontrado")
 
